@@ -5,48 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Visualizer | Video Library</title>
     <style>
-        body { margin: 0; font-family: 'Helvetica Neue', sans-serif; background: #050505; color: #ffffff; cursor: none; transition: background-color 0.5s; }
+        body { margin: 0; font-family: 'Helvetica Neue', sans-serif; background: #050505; color: #ffffff; cursor: none; transition: background-color 0.5s; overflow-x: hidden; }
         .cursor { width: 20px; height: 20px; border: 2px solid #00f0ff; border-radius: 50%; position: fixed; pointer-events: none; transform: translate(-50%, -50%); z-index: 9999; box-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
         #dim-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0, 0, 0, 0.85); z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
         body.video-playing #dim-overlay { opacity: 1; }
         .top-nav { padding: 30px 10%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1a; position: relative; z-index: 10; }
-        .back-link { color: #888; text-decoration: none; text-transform: uppercase; cursor: none; }
+        .back-link { color: #888; text-decoration: none; text-transform: uppercase; cursor: none; letter-spacing: 2px; transition: color 0.3s; }
+        .back-link:hover { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.6); }
         .library-container { padding: 50px 10%; display: grid; grid-template-columns: 2.5fr 1fr; gap: 40px; position: relative; }
-        .main-player { background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; z-index: 10; }
-        .main-player video { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #000; border-radius: 5px; }
-        .playlist { display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; z-index: 10; }
-        .thumb-item { background: #111; border: 1px solid #222; padding: 10px; border-radius: 5px; transition: 0.3s; }
-        .thumb-item:hover { border-color: #ff007f; transform: translateX(-5px); }
-        .thumb-item video { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; pointer-events: none; }
+        .main-player { background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; z-index: 10; transition: box-shadow 0.5s ease; }
+        body.video-playing .main-player { box-shadow: 0 0 40px rgba(0, 240, 255, 0.15); }
+        .main-player video { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #000; border-radius: 5px; outline: none; }
+        .now-playing-title { margin-top: 20px; font-size: 1.5rem; font-weight: 300; color: #ccc; letter-spacing: 2px; }
+        .playlist { display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; padding-right: 15px; z-index: 10; }
+        .playlist::-webkit-scrollbar { width: 5px; }
+        .playlist::-webkit-scrollbar-track { background: #111; }
+        .playlist::-webkit-scrollbar-thumb { background: #333; }
+        .playlist::-webkit-scrollbar-thumb:hover { background: #ff007f; }
+        .thumb-item { background: #111; border: 1px solid #222; padding: 10px; border-radius: 5px; transition: 0.3s; cursor: none; }
+        .thumb-item:hover { border-color: #ff007f; transform: translateX(-5px); background: #1a1a1a; }
+        .thumb-item video { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 3px; pointer-events: none; }
+        .thumb-title { font-size: 0.9rem; color: #888; margin-top: 10px; letter-spacing: 1px; text-transform: uppercase; }
+        
+        @media (max-width: 900px) {
+            .library-container { grid-template-columns: 1fr; }
+            .playlist { max-height: none; flex-direction: row; overflow-x: auto; padding-right: 0; padding-bottom: 15px; }
+            .thumb-item { min-width: 200px; }
+        }
     </style>
 </head>
 <body>
     <div id="dim-overlay"></div>
     <div class="cursor" id="custom-cursor"></div>
-    <nav class="top-nav"><a href="index.html" class="back-link">← Return Home</a><h1 style="background: linear-gradient(90deg, #00f0ff, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem;">VAULT</h1></nav>
+    
+    <nav class="top-nav">
+        <a href="index.html" class="back-link">← Return Home</a>
+        <h1 style="margin: 0; background: linear-gradient(90deg, #00f0ff, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; letter-spacing: 4px; text-transform: uppercase;">VAULT</h1>
+    </nav>
+    
     <section class="library-container">
         <div class="main-player">
-            <video id="primary-video" controls autoplay muted><source src="Sequence 01.mp4" type="video/mp4"></video>
-            <div id="primary-title" style="margin-top:15px; color:#888;">Conference Room</div>
+            <video id="primary-video" controls autoplay muted>
+                <source src="Vid1.mp4" type="video/mp4">
+                Your browser does not support HTML video.
+            </video>
+            <div class="now-playing-title" id="primary-title">Architectural Project 01</div>
         </div>
+
         <div class="playlist">
-            <div class="thumb-item" onclick="loadVideo(0)"><video src="Sequence 01.mp4#t=2"></video><div class="thumb-title">Conference Room</div></div>
-            <div class="thumb-item" onclick="loadVideo(1)"><video src="Sequence 02.mp4#t=2"></video><div class="thumb-title">Executive Office</div></div>
-            <div class="thumb-item" onclick="loadVideo(2)"><video src="Sequence 03.mp4#t=2"></video><div class="thumb-title">Garden Patio</div></div>
-            <div class="thumb-item" onclick="loadVideo(3)"><video src="TestRenders.mp4#t=2"></video><div class="thumb-title">Cafe Renders</div></div>
-            <div class="thumb-item" onclick="loadVideo(4)"><video src="sample.mp4#t=2"></video><div class="thumb-title">Abstract Lounge</div></div>
+            <div class="thumb-item" onclick="loadVideo(0)">
+                <video src="Vid1.mp4#t=2"></video>
+                <div class="thumb-title">Project 01</div>
+            </div>
+
+            <div class="thumb-item" onclick="loadVideo(1)">
+                <video src="Vid2.mp4#t=2"></video>
+                <div class="thumb-title">Project 02</div>
+            </div>
+
+            <div class="thumb-item" onclick="loadVideo(2)">
+                <video src="Vid3.mp4#t=2"></video>
+                <div class="thumb-title">Project 03</div>
+            </div>
         </div>
     </section>
+
     <script>
         const player = document.getElementById('primary-video');
-        const title = document.getElementById('primary-title');
-        const videoData = [ {src:'Sequence 01.mp4', t:'Conference Room'}, {src:'Sequence 02.mp4', t:'Executive Office'}, {src:'Sequence 03.mp4', t:'Garden Patio'}, {src:'TestRenders.mp4', t:'Cafe Renders'}, {src:'sample.mp4', t:'Abstract Lounge'} ];
-        let cur = 0;
-        function loadVideo(i) { cur=i; player.src=videoData[i].src; title.innerText=videoData[i].t; player.play(); }
-        player.addEventListener('ended', () => { cur = (cur+1)%videoData.length; loadVideo(cur); });
-        player.addEventListener('play', () => document.body.classList.add('video-playing'));
-        player.addEventListener('pause', () => document.body.classList.remove('video-playing'));
-        document.addEventListener('mousemove', (e) => { const c = document.getElementById('custom-cursor'); c.style.left = e.clientX + 'px'; c.style.top = e.clientY + 'px'; });
+        const titleDisplay = document.getElementById('primary-title');
+        
+        // Video Data Array updated to 3 videos
+        const videoData = [
+            { src: 'Vid1.mp4', title: 'Architectural Project 01' },
+            { src: 'Vid2.mp4', title: 'Architectural Project 02' },
+            { src: 'Vid3.mp4', title: 'Architectural Project 03' }
+        ];
+        
+        let currentIndex = 0;
+
+        // Load specific video
+        function loadVideo(index) {
+            currentIndex = index;
+            player.src = videoData[currentIndex].src;
+            titleDisplay.innerText = videoData[currentIndex].title;
+            player.play();
+            
+            if(window.innerWidth <= 900) {
+                player.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Auto-play next video when current ends
+        player.addEventListener('ended', () => {
+            currentIndex++;
+            if (currentIndex >= videoData.length) {
+                currentIndex = 0; // Loops back to the first video
+            }
+            loadVideo(currentIndex);
+        });
+
+        // Cinema Mode Dimming Logic
+        player.addEventListener('play', () => {
+            document.body.classList.add('video-playing');
+        });
+
+        player.addEventListener('pause', () => {
+            document.body.classList.remove('video-playing');
+        });
+        
+        // Ensure it dims on initial auto-play load if not blocked by browser
+        if (!player.paused) {
+            document.body.classList.add('video-playing');
+        }
+
+        // Cursor logic
+        const cursor = document.getElementById('custom-cursor');
+        document.addEventListener('mousemove', (e) => { 
+            cursor.style.left = e.clientX + 'px'; 
+            cursor.style.top = e.clientY + 'px'; 
+        });
+
+        document.querySelectorAll('a, .thumb-item, video').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                cursor.style.width = '50px';
+                cursor.style.height = '50px';
+                cursor.style.background = 'rgba(255, 0, 127, 0.1)';
+                cursor.style.borderColor = '#ff007f';
+            });
+            item.addEventListener('mouseleave', () => {
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursor.style.background = 'transparent';
+                cursor.style.borderColor = '#00f0ff';
+            });
+        });
     </script>
 </body>
 </html>
